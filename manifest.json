@@ -1,0 +1,22 @@
+{
+  "name": "Youtube Looper",
+  "description": "Simple extension to create loops on youtube videos",
+  "version": "1.0",
+  "manifest_version": 3,
+  "action": {
+    "default_popup": "extension-home.html",
+    "default_icon": "images/loop.png"
+  },
+  "content_scripts": [
+    {
+      "js": ["scripts/content.js"],
+      "matches": ["https://www.youtube.com/*"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["images/*.svg", "scripts/loop-button.js", "scripts/loop-section.js"],
+      "matches": ["https://www.youtube.com/*"]
+    }
+  ]
+}
