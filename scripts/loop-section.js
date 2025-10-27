@@ -29,29 +29,33 @@
     });
     overlay.appendChild(range);
 
+    function getScrubberSize() {
+      const youtubeHandle = document.querySelector(".ytp-scrubber-button");
+      if (!youtubeHandle) return;
+
+      const computed = window.getComputedStyle(youtubeHandle);
+      const width = parseFloat(computed.width);
+
+      return width;
+    }
+
     const makeHandle = () => {
       const h = document.createElement("div");
       Object.assign(h.style, {
         position: "absolute",
-        bottom: "0",
-        width: "2px",
-        height: "20px",
+        bottom: "2px",
         background: "#fff",
-        borderRadius: "2px",
         cursor: "ew-resize",
         pointerEvents: "auto",
         transition: "background 0.2s",
       });
 
       const dot = document.createElement("div");
-      const dotSize = 6;
+
       Object.assign(dot.style, {
         position: "absolute",
-        top: `-${dotSize}px`,
         left: "50%",
         transform: "translateX(-50%)",
-        width: `${dotSize}px`,
-        height: `${dotSize}px`,
         background: "#fff",
         borderRadius: "50%",
         transition: "background 0.2s",
@@ -68,6 +72,44 @@
 
     const startHandle = makeHandle();
     const endHandle = makeHandle();
+
+    let startPercent = 20;
+    let endPercent = 60;
+
+    function updatePositions() {
+      const rect = progressBar.getBoundingClientRect();
+      const handleWidth = parseFloat(startHandle.style.width) || 0;
+
+      const startPx = (startPercent / 100) * rect.width;
+      const endPx = (endPercent / 100) * rect.width;
+
+      startHandle.style.left = `${startPx - handleWidth / 2}px`;
+      endHandle.style.left = `${endPx - handleWidth / 2}px`;
+
+      range.style.left = `${startPx}px`;
+      range.style.width = `${endPx - startPx}px`;
+    }
+
+    function adjustHandleSizes() {
+      const scrubberSize = getScrubberSize();
+
+      [startHandle, endHandle].forEach((h) => {
+        h.style.height = `${scrubberSize * 3}px`;
+        h.style.width = `${scrubberSize / 5}px`;
+
+        const dot = h.children[0];
+        dot.style.width = `${scrubberSize * 0.8}px`;
+        dot.style.height = `${scrubberSize * 0.8}px`;
+        dot.style.top = `-${dot.style.height / 2}px`;
+      });
+
+      updatePositions();
+    }
+
+    adjustHandleSizes();
+    window.addEventListener("resize", adjustHandleSizes);
+    document.addEventListener("fullscreenchange", adjustHandleSizes);
+
     overlay.appendChild(startHandle);
     overlay.appendChild(endHandle);
 
@@ -75,18 +117,7 @@
     progressBar.appendChild(overlay);
     progressBar.insertBefore(overlay, progressBar.firstChild);
 
-    let startPercent = 20;
-    let endPercent = 60;
     let activeHandle = null;
-
-    function updatePositions() {
-      range.style.left = startPercent + "%";
-      range.style.width = endPercent - startPercent + "%";
-      startHandle.style.left = `calc(${startPercent}% - 3px)`;
-      endHandle.style.left = `calc(${endPercent}% - 3px)`;
-    }
-
-    updatePositions();
 
     function onMouseDown(e) {
       e.preventDefault();
