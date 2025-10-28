@@ -1,7 +1,6 @@
 (() => {
   function createDraggableRangeOverlay() {
-    const existing = document.getElementById("yt-range-overlay");
-    if (existing) return existing;
+    document.getElementById("yt-range-overlay")?.remove();
 
     const progressBar = document.querySelector(".ytp-progress-bar");
     if (!progressBar) return null;

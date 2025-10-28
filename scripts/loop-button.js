@@ -60,8 +60,7 @@
   }
 
   async function initializeLoopButton() {
-    const existingButton = document.getElementById("loop-button");
-    if (existingButton) return;
+    document.getElementById("loop-button")?.remove();
 
     const videoControls = await waitForElement("#movie_player > div.ytp-chrome-bottom > div.ytp-chrome-controls > div.ytp-left-controls");
 
