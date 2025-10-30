@@ -1,10 +1,46 @@
 (() => {
-  function createDraggableRangeOverlay() {
-    document.getElementById("yt-range-overlay")?.remove();
+  function getScrubberSize() {
+    const youtubeHandle = document.querySelector(".ytp-scrubber-button");
+    if (!youtubeHandle) return;
 
-    const progressBar = document.querySelector(".ytp-progress-bar");
-    if (!progressBar) return null;
+    const computed = window.getComputedStyle(youtubeHandle);
+    const width = parseFloat(computed.width);
 
+    return width;
+  }
+
+  function makeHandle() {
+    const h = document.createElement("div");
+    Object.assign(h.style, {
+      position: "absolute",
+      bottom: "2px",
+      background: "#fff",
+      cursor: "ew-resize",
+      pointerEvents: "auto",
+      transition: "background 0.2s",
+    });
+
+    const dot = document.createElement("div");
+
+    Object.assign(dot.style, {
+      position: "absolute",
+      left: "50%",
+      transform: "translateX(-50%)",
+      background: "#fff",
+      borderRadius: "50%",
+      transition: "background 0.2s",
+    });
+
+    h.appendChild(dot);
+    h.addEventListener("mouseenter", () => (h.style.background = "#f00"));
+    h.addEventListener("mouseleave", () => (h.style.background = "#fff"));
+    dot.addEventListener("mouseenter", () => (dot.style.background = "#f00"));
+    dot.addEventListener("mouseleave", () => (dot.style.background = "#fff"));
+
+    return h;
+  }
+
+  function createOverlayElement() {
     const overlay = document.createElement("div");
     overlay.id = "yt-range-overlay";
     Object.assign(overlay.style, {
@@ -17,7 +53,10 @@
       zIndex: "0",
       display: "none",
     });
+    return overlay;
+  }
 
+  function createRangeElement() {
     const range = document.createElement("div");
     Object.assign(range.style, {
       position: "absolute",
@@ -26,51 +65,26 @@
       background: "rgba(255,0,0,0.2)",
       pointerEvents: "none",
     });
-    overlay.appendChild(range);
+    return range;
+  }
 
-    function getScrubberSize() {
-      const youtubeHandle = document.querySelector(".ytp-scrubber-button");
-      if (!youtubeHandle) return;
+  async function createDraggableRangeOverlay() {
+    const progressBar = await window.waitForElementWithTimeout(".ytp-progress-bar");
 
-      const computed = window.getComputedStyle(youtubeHandle);
-      const width = parseFloat(computed.width);
+    document.getElementById("yt-range-overlay")?.remove();
 
-      return width;
-    }
-
-    const makeHandle = () => {
-      const h = document.createElement("div");
-      Object.assign(h.style, {
-        position: "absolute",
-        bottom: "2px",
-        background: "#fff",
-        cursor: "ew-resize",
-        pointerEvents: "auto",
-        transition: "background 0.2s",
-      });
-
-      const dot = document.createElement("div");
-
-      Object.assign(dot.style, {
-        position: "absolute",
-        left: "50%",
-        transform: "translateX(-50%)",
-        background: "#fff",
-        borderRadius: "50%",
-        transition: "background 0.2s",
-      });
-
-      h.appendChild(dot);
-      h.addEventListener("mouseenter", () => (h.style.background = "#f00"));
-      h.addEventListener("mouseleave", () => (h.style.background = "#fff"));
-      dot.addEventListener("mouseenter", () => (dot.style.background = "#f00"));
-      dot.addEventListener("mouseleave", () => (dot.style.background = "#fff"));
-
-      return h;
-    };
-
+    const overlay = createOverlayElement();
+    const range = createRangeElement();
     const startHandle = makeHandle();
     const endHandle = makeHandle();
+
+    overlay.appendChild(range);
+    overlay.appendChild(startHandle);
+    overlay.appendChild(endHandle);
+
+    progressBar.style.position = "relative";
+    progressBar.appendChild(overlay);
+    progressBar.insertBefore(overlay, progressBar.firstChild);
 
     let startPercent = 20;
     let endPercent = 60;
@@ -108,13 +122,6 @@
     adjustHandleSizes();
     window.addEventListener("resize", adjustHandleSizes);
     document.addEventListener("fullscreenchange", adjustHandleSizes);
-
-    overlay.appendChild(startHandle);
-    overlay.appendChild(endHandle);
-
-    progressBar.style.position = "relative";
-    progressBar.appendChild(overlay);
-    progressBar.insertBefore(overlay, progressBar.firstChild);
 
     let activeHandle = null;
 
@@ -156,20 +163,18 @@
     startHandle.addEventListener("mousedown", onMouseDown);
     endHandle.addEventListener("mousedown", onMouseDown);
 
-    const video = document.querySelector("video");
-    if (video) {
-      video.addEventListener("timeupdate", () => {
-        if (!overlay.style.display || overlay.style.display === "none") return;
-        const { duration, currentTime } = video;
-        const startTime = (startPercent / 100) * duration;
-        const endTime = (endPercent / 100) * duration;
+    const video = await window.waitForElementWithTimeout("video");
+    video.addEventListener("timeupdate", () => {
+      if (!overlay.style.display || overlay.style.display === "none") return;
+      const { duration, currentTime } = video;
+      const startTime = (startPercent / 100) * duration;
+      const endTime = (endPercent / 100) * duration;
 
-        if (currentTime >= endTime) {
-          video.currentTime = startTime;
-          video.play();
-        }
-      });
-    }
+      if (currentTime >= endTime) {
+        video.currentTime = startTime;
+        video.play();
+      }
+    });
 
     return {
       overlay,

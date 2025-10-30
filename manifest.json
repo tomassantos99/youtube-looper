@@ -15,7 +15,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["images/*.svg", "scripts/loop-button.js", "scripts/loop-section.js"],
+      "resources": ["images/*.svg", "scripts/loop-button.js", "scripts/loop-section.js", "scripts/utils.js"],
       "matches": ["https://www.youtube.com/*"]
     }
   ]

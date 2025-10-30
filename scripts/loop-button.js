@@ -1,24 +1,4 @@
 (() => {
-  async function waitForElement(selector) {
-    return new Promise((resolve) => {
-      if (document.querySelector(selector)) {
-        return resolve(document.querySelector(selector));
-      }
-
-      const observer = new MutationObserver(() => {
-        if (document.querySelector(selector)) {
-          observer.disconnect();
-          resolve(document.querySelector(selector));
-        }
-      });
-
-      observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-      });
-    });
-  }
-
   async function createLoopSvg() {
     const svgUrl = chrome.runtime.getURL("images/loop.svg");
     const svg = await fetch(svgUrl);
@@ -60,9 +40,8 @@
   }
 
   async function initializeLoopButton() {
+    const videoControls = await waitForElementWithTimeout("#movie_player > div.ytp-chrome-bottom > div.ytp-chrome-controls > div.ytp-left-controls");
     document.getElementById("loop-button")?.remove();
-
-    const videoControls = await waitForElement("#movie_player > div.ytp-chrome-bottom > div.ytp-chrome-controls > div.ytp-left-controls");
 
     const { loopButtonElement, loopButton, svgElement } = await createLoopButtonElement();
     videoControls.appendChild(loopButtonElement);
